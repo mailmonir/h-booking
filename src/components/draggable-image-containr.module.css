@@ -1,0 +1,26 @@
+/* components/DraggableImageContainer.module.css */
+.imageContainer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  border: 2px solid #ccc;
+  padding: 20px;
+  background-color: #f9f9f9;
+}
+
+.draggable {
+  width: 100px;
+  height: 100px;
+  cursor: grab;
+  border: 1px solid #ddd;
+  transition: transform 0.2s ease;
+}
+
+.draggable:active {
+  cursor: grabbing;
+  transform: scale(1.1);
+}
+
+.dragging {
+  opacity: 0.5;
+}

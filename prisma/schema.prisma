@@ -1,0 +1,225 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["fullTextSearch"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                       String                     @id @default(uuid())
+  name                     String
+  email                    String                     @unique
+  role                     Role                       @default(guest)
+  passwordHash             String?
+  emailVerified            Boolean?                   @default(false)
+  bio                      String?
+  avatarUrl                String[]
+  providerId               String?                    @default("user")
+  providerUserId           String?
+  session                  Session[]
+  createdAt                DateTime                   @default(now())
+  updatedAt                DateTime                   @updatedAt
+  EmailVerificationRequest EmailVerificationRequest[]
+  PasswordResetSession     PasswordResetSession[]
+  booking                  Booking?                   @relation(fields: [bookingId], references: [id])
+  bookingId                String?
+
+  @@map("users")
+}
+
+model Session {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("sessions")
+}
+
+model EmailVerificationRequest {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  email     String
+  code      String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model PasswordResetSession {
+  id            String   @id @default(uuid())
+  email         String
+  code          String
+  expiresAt     DateTime
+  emailVerified Boolean
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+enum Role {
+  stuff
+  manager
+  admin
+  guest
+}
+
+model Payment_Status {
+  id                  String    @id @default(uuid())
+  payment_status_name String
+  slug                String    @unique
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  createdBy           String
+  updatedBy           String?
+  booking             Booking[]
+}
+
+model Booking {
+  id                  String         @id @default(uuid())
+  guest_id            String
+  room_id             String
+  payment_status_id   String
+  payment_status      Payment_Status @relation(fields: [payment_status_id], references: [id])
+  checkin_date        DateTime
+  checkout_date       DateTime
+  num_adults          Int
+  num_children        Int
+  booking_amount      Int
+  payment_status_name String
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
+  createdBy           String
+  updatedBy           String?
+  addons              Addon[]
+  rooms               Room[]
+  users               User[]
+}
+
+model Addon {
+  id         String    @id @default(uuid())
+  addon_name String
+  slug       String    @unique
+  price      Int
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  createdBy  String
+  updatedBy  String?
+  bookings   Booking[]
+}
+
+model Room {
+  id             String      @id @default(uuid())
+  floor_id       String
+  floor          Floor       @relation(fields: [floor_id], references: [id])
+  room_class_id  String
+  room_class     Room_Class  @relation(fields: [room_class_id], references: [id])
+  room_status_id String
+  room_status    Room_Status @relation(fields: [room_status_id], references: [id])
+  room_number    String      @unique
+  room_images    String[]
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+  createdBy      String
+  updatedBy      String?
+  bookings       Booking[]
+}
+
+model Floor {
+  id           String   @id @default(uuid())
+  floor_number Int      @unique
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  createdBy    String
+  updatedBy    String?
+  Room         Room[]
+}
+
+model Room_Class {
+  id                  String                @id @default(uuid())
+  class_name          String
+  slug                String                @unique
+  base_price          Int
+  description         String?
+  image               String[]
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
+  createdBy           String
+  updatedBy           String?
+  Room                Room[]
+  features            Feature[]
+  room_class_bed_type Room_Class_Bed_Type[]
+}
+
+model Room_Status {
+  id          String   @id @default(uuid())
+  status_name String
+  slug        String   @unique
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  createdBy   String
+  updatedBy   String?
+  Room        Room[]
+}
+
+model Feature {
+  id           String       @id @default(uuid())
+  feature_name String
+  slug         String       @unique
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  createdBy    String
+  updatedBy    String?
+  room_classes Room_Class[]
+}
+
+model Bed_Type {
+  id                  String                @id @default(uuid())
+  bed_type_name       String
+  slug                String                @unique
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
+  createdBy           String
+  updatedBy           String?
+  room_class_bed_type Room_Class_Bed_Type[]
+}
+
+model Room_Class_Bed_Type {
+  id            String     @id @default(uuid())
+  room_class_id String
+  room_class    Room_Class @relation(fields: [room_class_id], references: [id])
+  bed_type_id   String
+  bed_type      Bed_Type   @relation(fields: [bed_type_id], references: [id])
+  num_beds      Int
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  createdBy     String
+  updatedBy     String?
+}
+
+model Media {
+  id          String   @id @default(uuid())
+  fileName    String
+  fileUrl     String
+  fileType    String
+  uploadedBy  String
+  uploadedTo  String?
+  title       String?
+  description String?
+  caption     String?
+  altText     String?
+  width       Int?
+  height      Int?
+  size        Int?
+  createdAt   DateTime @default(now())
+  createdBy   String
+  updatedAt   DateTime @updatedAt
+  updatedBy   String?
+}
